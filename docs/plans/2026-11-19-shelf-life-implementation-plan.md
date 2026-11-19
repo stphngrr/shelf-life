@@ -71,9 +71,10 @@ Conventions for every step:
 ## Phase 3 — Pure logic and data layer
 
 3.1 `src/lib/rating.ts` — quarters ↔ stars, formatting, clamping/validation.
-3.2 `src/lib/filters.ts` — `matchesFilters(book, filters)`: years OR, tags
-    AND, status set (unmarked as a status), case-insensitive title/author
-    search. Default filters.
+3.2 `src/lib/filters.ts` — `matchesFilters(book, filters)`: years OR (empty
+    = all), tags AND, status set (unmarked as a status), case-insensitive
+    title/author search that ignores the year selection. Default filters
+    (all years, all statuses but dismissed).
 3.3 `src/lib/urlState.ts` — encode/decode filters to/from hash; round-trip
     tests; unknown/garbage params ignored.
 3.4 `src/lib/statusTransitions.ts` — given current status + action, the next

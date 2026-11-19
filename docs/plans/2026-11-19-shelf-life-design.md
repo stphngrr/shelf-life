@@ -88,9 +88,11 @@ NULL = not rated; 0 = explicit zero stars.
 ## 5. Frontend UI
 
 - **Login:** email → magic link; session persists.
-- **Filter bar:** Years (multi-select, OR; default most recent year), Tags
-  (multi-select, AND), Status (multi-select; default all but dismissed),
-  title/author search, result count, clear filters.
+- **Filter bar:** Years (multi-select, OR; none selected = all years, which
+  is the default), Tags (multi-select, AND), Status (multi-select; default all
+  but dismissed), title/author search, result count, clear filters.
+- **Search spans all years** regardless of the year selection; tag and
+  status filters still apply to search results.
 - **URL state:** filters encoded in the hash, e.g.
   `#years=2024,2025&tags=fiction&status=unmarked`.
 - **Views:** Grid (covers + title/author, status badge) and List (thumbnail,
@@ -185,8 +187,6 @@ or export with Goodreads/StoryGraph; custom tags/shelves.
 
 - **OR/AND filters** — let tag (and possibly other) filters combine with OR
   as well as AND.
-- **Don't restrict search/views by year** — search and browse across all
-  years rather than scoping to selected years.
 - **Library hold status + read format** — a status for "reserved in
   Libby/library"; when Read, record format (audio / ebook / physical).
   Schema impact: new `book_status` enum value; new nullable format column on
