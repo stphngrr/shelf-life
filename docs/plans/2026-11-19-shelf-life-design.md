@@ -183,4 +183,15 @@ or export with Goodreads/StoryGraph; custom tags/shelves.
 
 ## 10. Future features backlog
 
-_Stephanie's list goes here as it's shared._
+- **OR/AND filters** — let tag (and possibly other) filters combine with OR
+  as well as AND.
+- **Don't restrict search/views by year** — search and browse across all
+  years rather than scoping to selected years.
+- **Library hold status + read format** — a status for "reserved in
+  Libby/library"; when Read, record format (audio / ebook / physical).
+  Schema impact: new `book_status` enum value; new nullable format column on
+  `book_statuses` (or on a reads table if rereads land first).
+- **Per-book notes** — free-form personal notes on each book.
+- **Stats** — graphs/charts of what's been read: types of books (tags),
+  reading over time, etc. Relies on `date_read` and tags; SQL views are the
+  likely backing.
