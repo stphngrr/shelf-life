@@ -7,7 +7,7 @@ import { importCatalogEntries } from '../../scripts/catalog/importEntries.ts'
 import { normalizeShelf } from '../../scripts/npr/normalize.ts'
 import { parseShelf } from '../../scripts/npr/parseShelf.ts'
 // Imported rather than read from disk so it loads the same way in node and jsdom test environments.
-import nprShelfSample from '../fixtures/npr-shelf-sample.json'
+import nprShelfSample from '../fixtures/npr-shelf-sample.json' with { type: 'json' }
 
 export const NPR_LIST = 'npr-books-we-love'
 

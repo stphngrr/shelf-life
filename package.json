@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
     "import:npr": "node --env-file-if-exists=.env.local scripts/import-npr.ts",
     "gen:types": "{ printf '%s\\n%s\\n\\n' '// ABOUTME: Database types generated from the local Supabase schema by `npm run gen:types`.' '// ABOUTME: Do not edit by hand; regenerate after changing migrations.'; supabase gen types typescript; } > src/types/database.ts"
   },
