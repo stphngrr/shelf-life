@@ -2,7 +2,7 @@
 
 ## `npr-shelf-sample.json`
 
-25 records copied unmodified from `https://apps.npr.org/best-books/shelf.json`
+26 records copied unmodified from `https://apps.npr.org/best-books/shelf.json`
 on 2026-11-21. Each record was chosen for a quirk in NPR's data that the
 import must handle (records are `year:id`):
 
@@ -30,3 +30,4 @@ import must handle (records are `year:id`):
 | 2019:344 | Malformed `seamus` string (`721564742/`) |
 | 2025:203 | Literal `&` in title |
 | 2025:376 | 13-digit source ISBN |
+| 2021:325 | Story link with no `url` (the only one in the feed) |

@@ -888,5 +888,58 @@
         "url": "https://www.wwno.org/show/louisiana-considered/2025-04-11/bestselling-author-and-nola-native-michael-lewis-out-with-new-book-who-is-government"
       }
     ]
+  },
+  {
+    "id": 325,
+    "title": "The Vixen: A Novel",
+    "author": "Francine Prose",
+    "reviewers": [
+      "Sacha Pfeiffer"
+    ],
+    "text": "<p>I confess I almost stopped reading this after the first chapter. It’s loosely based on Ethel and Julius Rosenberg, the American couple executed during the Cold War for being suspected Soviet spies, and I feared it would be depressingly serious. Who needs that these days? But I pushed on, and it became another book entirely. Part coming-of-age story, part romance and part comedy, it’s alternately poignant and hilarious, with wonderful insights into family, society, class and ethics, and wry commentary on the fragile egos of writers. It’s filled with life lessons and, in a bonus, contains an intentionally cheesy novel-within-a-novel. As Francine Prose told me: “Writing badly on purpose is so much<span class=\"widont\"> </span>fun!”</p>",
+    "tags": [
+      "historical fiction",
+      "mysteries & thrillers",
+      "book club ideas",
+      "family matters",
+      "love & romance",
+      "staff picks",
+      "funny stuff",
+      "fiction"
+    ],
+    "isbn": "0063012146",
+    "cover": "0063012146",
+    "goodreads": 58518166,
+    "itunes": 9780063012141,
+    "bookshop": 9780063012141,
+    "image": "https://m.media-amazon.com/images/I/51TTiQO6VoL._SL500_.jpg",
+    "year": 2021,
+    "isbn13": "9780063012141",
+    "isbn10": "0063012146",
+    "links": [
+      {
+        "year": 2021,
+        "id": 325,
+        "book": "The Vixen",
+        "source": "NPR",
+        "text": "The novel, 'The Vixen,' explores the moral ambiguity of 1950s America",
+        "url": "https://www.npr.org/2021/07/12/1015185077/the-novel-the-vixen-explores-the-moral-ambiguity-of-1950s-america"
+      },
+      {
+        "year": 2021,
+        "id": 325,
+        "book": "The Vixen",
+        "source": "WSHU",
+        "text": "Book Review: The Vixen",
+        "url": "https://www.wshu.org/culture/2021-10-06/book-review-the-vixen"
+      },
+      {
+        "year": 2021,
+        "id": 325,
+        "book": "The Vixen",
+        "source": "KALW",
+        "text": "Binah: Francine Prose’s The Vixen"
+      }
+    ]
   }
 ]
