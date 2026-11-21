@@ -1,18 +1,17 @@
 // ABOUTME: Loads catalog data into the local database for integration tests.
 // ABOUTME: Uses the real NPR fixture, parsed and normalized exactly as the import CLI does.
 
-import { readFileSync } from 'node:fs'
 import pg from 'pg'
 import type { CatalogEntry } from '../../scripts/catalog/catalogEntry.ts'
 import { importCatalogEntries } from '../../scripts/catalog/importEntries.ts'
 import { normalizeShelf } from '../../scripts/npr/normalize.ts'
 import { parseShelf } from '../../scripts/npr/parseShelf.ts'
+// Imported rather than read from disk so it loads the same way in node and jsdom test environments.
+import nprShelfSample from '../fixtures/npr-shelf-sample.json'
 
 export const NPR_LIST = 'npr-books-we-love'
 
-export const fixtureEntries: CatalogEntry[] = normalizeShelf(
-  parseShelf(JSON.parse(readFileSync(new URL('../fixtures/npr-shelf-sample.json', import.meta.url), 'utf-8'))),
-).entries
+export const fixtureEntries: CatalogEntry[] = normalizeShelf(parseShelf(nprShelfSample)).entries
 
 export function fixtureEntry(sourceKey: string): CatalogEntry {
   const entry = fixtureEntries.find((e) => e.sourceKey === sourceKey)

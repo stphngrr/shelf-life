@@ -1,7 +1,7 @@
 // ABOUTME: Decides which books match the browse filters: years, tags, status, and text search.
 // ABOUTME: Years combine with OR, tags with AND; search spans all years but respects tags and status.
 
-import type { BookStatus, CatalogItem } from '../types/catalog.ts'
+import type { BookStatus, CatalogItem, StatusRecord } from '../types/catalog.ts'
 
 /** A status filter value: one of the stored statuses, or "unmarked" for books with no status. */
 export type StatusFilter = BookStatus | 'unmarked'
@@ -26,7 +26,8 @@ export const DEFAULT_FILTERS: Filters = {
 }
 
 export type FilterableBook = Pick<CatalogItem, 'title' | 'author' | 'year' | 'tags'> & {
-  status: BookStatus | null
+  /** The reader's status for the book, or null when unmarked. */
+  status: Pick<StatusRecord, 'status'> | null
 }
 
 /** Lowercases and strips accents so "Cañas" and "canas" compare equal. */
@@ -50,7 +51,7 @@ export function matchesFilters(book: FilterableBook, filters: Filters): boolean 
 
   if (!filters.tags.every((tag) => book.tags.includes(tag))) return false
 
-  const status: StatusFilter = book.status ?? 'unmarked'
+  const status: StatusFilter = book.status?.status ?? 'unmarked'
   return filters.statuses.length === 0 || filters.statuses.includes(status)
 }
 

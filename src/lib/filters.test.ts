@@ -4,14 +4,16 @@
 import type { BookStatus } from '../types/catalog.ts'
 import { DEFAULT_FILTERS, filterBooks, matchesFilters, type FilterableBook, type Filters } from './filters.ts'
 
-function book(overrides: Partial<FilterableBook> = {}): FilterableBook {
+type BookOverrides = Partial<Omit<FilterableBook, 'status'>> & { status?: BookStatus | null }
+
+function book({ status = null, ...overrides }: BookOverrides = {}): FilterableBook {
   return {
     title: 'A Title',
     author: 'An Author',
     year: 2024,
     tags: ['fiction'],
-    status: null,
     ...overrides,
+    status: status ? { status } : null,
   }
 }
 
