@@ -28,6 +28,15 @@ describe('catalog schema', () => {
     await resetDatabase()
   })
 
+  it('seeds the NPR Books We Love list', async () => {
+    const { data, error } = await secretClient().from('lists').select('slug, name, source_url')
+
+    expect(error).toBeNull()
+    expect(data).toEqual([
+      { slug: 'npr-books-we-love', name: 'NPR Books We Love', source_url: 'https://apps.npr.org/best-books/' },
+    ])
+  })
+
   it('stores a list entry joined to its list and book, with defaults filled in', async () => {
     const list = await insertList()
     const book = await insertBook()

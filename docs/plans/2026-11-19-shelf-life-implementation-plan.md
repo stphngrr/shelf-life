@@ -115,7 +115,10 @@ Conventions for every step:
 
 6.1 Create Supabase project (Stephanie, in dashboard; free tier). Link CLI,
     `supabase db push` migrations. Disable signups; configure magic-link
-    redirect URL to the Pages URL. Create Stephanie's user.
+    redirect URL to the Pages URL. Create Stephanie's user. Note:
+    `supabase/config.toml` auth settings apply only locally — `db push` does
+    not carry them, so set them in the dashboard (or `supabase config push`)
+    and verify signups are rejected in production.
 6.2 Configure Vite `base` for `/shelf-life/`; production env via build-time
     vars (URL + publishable key only).
 6.3 `deploy.yml`: typecheck, unit/component tests, build, deploy to Pages.

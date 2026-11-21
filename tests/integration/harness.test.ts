@@ -76,6 +76,22 @@ describe('Supabase test harness', () => {
     expect(rows[0].count).toBe('0')
   })
 
+  it('resetDatabase keeps the reference lists seeded by migrations', async () => {
+    await resetDatabase()
+
+    const rows = await sql<{ slug: string }>('select slug from public.lists')
+    expect(rows).toEqual([{ slug: 'npr-books-we-love' }])
+  })
+
+  it('resetDatabase removes lists created by tests', async () => {
+    await sql("insert into public.lists (slug, name, source_url) values ('test-list', 'Test', 'https://example.com')")
+
+    await resetDatabase()
+
+    const rows = await sql<{ slug: string }>('select slug from public.lists')
+    expect(rows).toEqual([{ slug: 'npr-books-we-love' }])
+  })
+
   it('resetDatabase empties public tables', async () => {
     await sql('create table public.harness_canary (id int)')
     try {

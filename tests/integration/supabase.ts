@@ -74,13 +74,20 @@ export async function createTestUser(): Promise<{ user: User; client: SupabaseCl
   return { user: created.data.user, client }
 }
 
-/** Empties every public table and deletes all auth users in the local database. */
+/** Lists seeded by migrations; resets keep them so tests see the same reference data as production. */
+const REFERENCE_LIST_SLUGS = ['npr-books-we-love']
+
+/**
+ * Empties every public table except the reference lists seeded by migrations,
+ * and deletes all auth users in the local database.
+ */
 export async function resetDatabase(): Promise<void> {
   const tables = await sql<{ name: string }>(
-    "select format('%I.%I', schemaname, tablename) as name from pg_tables where schemaname = 'public'",
+    "select format('%I.%I', schemaname, tablename) as name from pg_tables where schemaname = 'public' and tablename <> 'lists'",
   )
   if (tables.length > 0) {
     await sql(`truncate ${tables.map((t) => t.name).join(', ')} restart identity cascade`)
   }
+  await sql('delete from public.lists where slug <> all($1)', [REFERENCE_LIST_SLUGS])
   await sql('delete from auth.users')
 }
