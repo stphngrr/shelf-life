@@ -2,7 +2,7 @@
 // ABOUTME: Renders the real app against the local Supabase stack with the NPR fixture imported.
 // @vitest-environment jsdom
 
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -107,6 +107,7 @@ describe('browsing and marking books', () => {
 
   beforeEach(async () => {
     window.history.replaceState(null, '', '/')
+    localStorage.clear()
     await resetDatabase()
   })
 
@@ -159,6 +160,25 @@ describe('browsing and marking books', () => {
     await user.click(within(screen.getByRole('group', { name: 'Status' })).getByRole('button', { name: 'Dismissed' }))
 
     expect(screen.getAllByRole('article')).toHaveLength(60)
+  })
+
+  it('switches to the list view and remembers it on this device', async () => {
+    await runImport(fixtureEntries)
+    const user = await renderPage()
+    expect(card('Baldwin: A Love Story').queryByText('2025')).toBeNull()
+
+    await user.click(within(screen.getByRole('group', { name: 'View' })).getByRole('button', { name: 'List' }))
+
+    expect(card('Baldwin: A Love Story').getByText('2025')).toBeInTheDocument()
+    cleanup()
+    const { wrapper: Wrapper } = createAppWrapper(client)
+    render(<BrowsePage userId={userId} />, { wrapper: Wrapper })
+    await screen.findByRole('status')
+    expect(within(screen.getByRole('group', { name: 'View' })).getByRole('button', { name: 'List' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(card('Baldwin: A Love Story').getByText('2025')).toBeInTheDocument()
   })
 
   it('marks a book read with one tap and saves it', async () => {

@@ -9,10 +9,13 @@ import { toggleStatus } from '../lib/statusTransitions.ts'
 import { filtersToHash } from '../lib/urlState.ts'
 import type { BookStatus } from '../types/catalog.ts'
 import { BookGrid } from './BookGrid.tsx'
+import { BookList } from './BookList.tsx'
 import { FilterBar } from './FilterBar.tsx'
 import { useBooks, type BrowseBook } from './useBooks.ts'
 import { useFilters } from './useFilters.ts'
 import { useSetBookStatus } from './useSetBookStatus.ts'
+import { useViewMode } from './useViewMode.ts'
+import { ViewToggle } from './ViewToggle.tsx'
 
 /** How many books to show at first, and how many more each "Show more" adds. */
 const PAGE_SIZE = 60
@@ -21,6 +24,8 @@ export function BrowsePage({ userId }: { userId: string }) {
   const books = useBooks(userId)
   const [filters, setFilters] = useFilters()
   const { setStatus, errorMessage, dismissError } = useSetBookStatus(userId)
+  const [viewMode, setViewMode] = useViewMode()
+  const BookView = viewMode === 'list' ? BookList : BookGrid
 
   const facets = useMemo(() => catalogFacets(books.books), [books.books])
   const sorted = useMemo(() => sortBooks(books.books), [books.books])
@@ -66,7 +71,10 @@ export function BrowsePage({ userId }: { userId: string }) {
           </button>
         </div>
       )}
-      <BookGrid books={matching.slice(0, shownCount)} onToggleStatus={handleToggleStatus} onOpen={() => {}} />
+      <div className="flex justify-end">
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
+      </div>
+      <BookView books={matching.slice(0, shownCount)} onToggleStatus={handleToggleStatus} onOpen={() => {}} />
       {remaining > 0 && (
         <button
           type="button"
