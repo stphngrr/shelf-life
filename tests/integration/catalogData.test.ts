@@ -2,19 +2,10 @@
 // ABOUTME: Runs as a signed-in user, as the browser does, including catalogs larger than one API page.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CatalogEntry } from '../../scripts/catalog/catalogEntry.ts'
 import { fetchCatalog, fetchEntryDetail } from '../../src/data/catalog.ts'
 import type { Database } from '../../src/types/database.ts'
-import { fixtureEntries, fixtureEntry, runImport } from './catalogFixtures.ts'
+import { fixtureEntries, fixtureEntry, runImport, syntheticEntries } from './catalogFixtures.ts'
 import { createTestUser, publishableClient, resetDatabase, sql } from './supabase.ts'
-
-function syntheticEntries(count: number): CatalogEntry[] {
-  return Array.from({ length: count }, (_, i) => ({
-    sourceKey: `2000:${i}`,
-    book: { title: `Book ${i}`, author: 'Author', isbn10: null, isbn13: null, coverUrl: null },
-    entry: { year: 2000, edition: null, tags: [], blurbHtml: '', reviewers: [], externalLinks: { stories: [] } },
-  }))
-}
 
 async function entryIds(sourceKey: string) {
   const rows = await sql<{ id: string; book_id: string }>('select id, book_id from public.list_entries where source_key = $1', [

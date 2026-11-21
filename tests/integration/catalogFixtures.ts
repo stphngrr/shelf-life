@@ -20,6 +20,15 @@ export function fixtureEntry(sourceKey: string): CatalogEntry {
   return entry
 }
 
+/** Minimal made-up entries, for tests that need more books than the fixture has. */
+export function syntheticEntries(count: number): CatalogEntry[] {
+  return Array.from({ length: count }, (_, i) => ({
+    sourceKey: `2000:${i}`,
+    book: { title: `Book ${i}`, author: 'Author', isbn10: null, isbn13: null, coverUrl: null },
+    entry: { year: 2000, edition: null, tags: [], blurbHtml: '', reviewers: [], externalLinks: { stories: [] } },
+  }))
+}
+
 /** Imports entries into the local database through the real catalog importer. */
 export async function runImport(entries: CatalogEntry[], listSlug = NPR_LIST) {
   const client = new pg.Client({ connectionString: process.env.SUPABASE_DB_URL })
