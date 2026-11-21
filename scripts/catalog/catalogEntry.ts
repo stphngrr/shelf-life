@@ -1,23 +1,9 @@
 // ABOUTME: Describes a list entry, and the book it refers to, in the shape the catalog import writes.
 // ABOUTME: Source-specific normalizers (such as NPR's) produce these; the importer consumes them.
 
-export interface StoryLink {
-  source: string
-  text: string
-  url: string
-}
+import type { ExternalLinks } from '../../src/types/catalog.ts'
 
-/** Outside pages about a book; stored as the list entry's `external_links` JSON. */
-export interface ExternalLinks {
-  /** The book's page on the source list's own site. */
-  listPage?: string
-  goodreads?: string
-  bookshop?: string
-  appleBooks?: string
-  worldcat?: string
-  /** Articles, reviews, and interviews about the book. */
-  stories: StoryLink[]
-}
+export type { ExternalLinks, StoryLink } from '../../src/types/catalog.ts'
 
 export interface CatalogBook {
   title: string

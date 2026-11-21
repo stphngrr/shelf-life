@@ -14,6 +14,24 @@ export interface StatusRecord {
   ratingQuarters: number | null
 }
 
+export interface StoryLink {
+  source: string
+  text: string
+  url: string
+}
+
+/** Outside pages about a book; stored as the list entry's `external_links` JSON. */
+export interface ExternalLinks {
+  /** The book's page on the source list's own site. */
+  listPage?: string
+  goodreads?: string
+  bookshop?: string
+  appleBooks?: string
+  worldcat?: string
+  /** Articles, reviews, and interviews about the book. */
+  stories: StoryLink[]
+}
+
 /** One book's appearance on a list, with the fields needed to browse and filter. */
 export interface CatalogItem {
   entryId: string
