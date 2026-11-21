@@ -1,29 +1,9 @@
 // ABOUTME: Integration tests for importing catalog entries into the local database.
 // ABOUTME: Uses the real NPR fixture, parsed and normalized exactly as the import CLI does.
 
-import { readFileSync } from 'node:fs'
-import pg from 'pg'
 import type { CatalogEntry } from '../../scripts/catalog/catalogEntry.ts'
-import { importCatalogEntries } from '../../scripts/catalog/importEntries.ts'
-import { normalizeShelf } from '../../scripts/npr/normalize.ts'
-import { parseShelf } from '../../scripts/npr/parseShelf.ts'
+import { fixtureEntries, NPR_LIST, runImport } from './catalogFixtures.ts'
 import { createTestUser, resetDatabase, sql } from './supabase.ts'
-
-const NPR_LIST = 'npr-books-we-love'
-
-const fixtureEntries: CatalogEntry[] = normalizeShelf(
-  parseShelf(JSON.parse(readFileSync(new URL('../fixtures/npr-shelf-sample.json', import.meta.url), 'utf-8'))),
-).entries
-
-async function runImport(entries: CatalogEntry[], listSlug = NPR_LIST) {
-  const client = new pg.Client({ connectionString: process.env.SUPABASE_DB_URL })
-  await client.connect()
-  try {
-    return await importCatalogEntries(client, listSlug, entries)
-  } finally {
-    await client.end()
-  }
-}
 
 async function count(table: string): Promise<number> {
   const rows = await sql<{ count: string }>(`select count(*) from public.${table}`)

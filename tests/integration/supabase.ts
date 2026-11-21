@@ -4,6 +4,7 @@
 import { randomUUID } from 'node:crypto'
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js'
 import pg from 'pg'
+import type { Database } from '../../src/types/database.ts'
 
 const LOCAL_DATABASE_HOSTS = ['127.0.0.1', 'localhost']
 const TEST_USER_PASSWORD = 'integration-test-password'
@@ -17,6 +18,9 @@ function requireEnv(name: string): string {
 }
 
 const clientOptions = { auth: { persistSession: false, autoRefreshToken: false } }
+
+// The secret-key and publishable-key clients are untyped so tests can send rows the
+// schema should reject; signed-in test users get a typed client, as the app does.
 
 /** Client using the secret key: bypasses Row Level Security and can call admin APIs. */
 export function secretClient(): SupabaseClient {
@@ -58,7 +62,7 @@ export async function sql<Row extends pg.QueryResultRow = pg.QueryResultRow>(
 }
 
 /** Creates a confirmed user and returns it with a publishable-key client signed in as that user. */
-export async function createTestUser(): Promise<{ user: User; client: SupabaseClient }> {
+export async function createTestUser(): Promise<{ user: User; client: SupabaseClient<Database> }> {
   const email = `test-${randomUUID()}@example.com`
   const created = await secretClient().auth.admin.createUser({
     email,
@@ -67,7 +71,11 @@ export async function createTestUser(): Promise<{ user: User; client: SupabaseCl
   })
   if (created.error) throw created.error
 
-  const client = publishableClient()
+  const client = createClient<Database>(
+    requireEnv('VITE_SUPABASE_URL'),
+    requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY'),
+    clientOptions,
+  )
   const signedIn = await client.auth.signInWithPassword({ email, password: TEST_USER_PASSWORD })
   if (signedIn.error) throw signedIn.error
 
