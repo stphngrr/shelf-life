@@ -11,6 +11,7 @@ import { LoginScreen } from '../../src/auth/LoginScreen.tsx'
 import { SupabaseProvider } from '../../src/data/SupabaseProvider.tsx'
 import { createAppSupabaseClient } from '../../src/data/supabaseClient.ts'
 import { clearMailbox, countMessagesTo, magicLinkSentTo } from './mailpit.ts'
+import { createAppWrapper } from './queryWrapper.tsx'
 import { createTestUser, resetDatabase, secretClient } from './supabase.ts'
 
 /** The app's real client configuration, with its own session storage so tests don't share one. */
@@ -131,11 +132,7 @@ describe('the app shell', () => {
   })
 
   it('shows the sign-in screen to a signed-out visitor', async () => {
-    render(
-      <SupabaseProvider client={appClient()}>
-        <App />
-      </SupabaseProvider>,
-    )
+    render(<App />, { wrapper: createAppWrapper(appClient()).wrapper })
 
     expect(await screen.findByRole('button', { name: 'Email me a sign-in link' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'shelf-life' })).toBeInTheDocument()
@@ -146,11 +143,7 @@ describe('the app shell', () => {
     const client = appClient()
     const { data } = await secretClient().auth.admin.generateLink({ type: 'magiclink', email: user.email! })
     await client.auth.verifyOtp({ token_hash: data.properties!.hashed_token, type: 'magiclink' })
-    render(
-      <SupabaseProvider client={client}>
-        <App />
-      </SupabaseProvider>,
-    )
+    render(<App />, { wrapper: createAppWrapper(client).wrapper })
 
     await userEvent.setup().click(await screen.findByRole('button', { name: 'Sign out' }))
 

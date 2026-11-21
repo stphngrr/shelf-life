@@ -51,8 +51,22 @@ export function matchesFilters(book: FilterableBook, filters: Filters): boolean 
 
   if (!filters.tags.every((tag) => book.tags.includes(tag))) return false
 
-  const status: StatusFilter = book.status?.status ?? 'unmarked'
-  return filters.statuses.length === 0 || filters.statuses.includes(status)
+  return isStatusIncluded(filters.statuses, book.status?.status ?? 'unmarked')
+}
+
+/** Whether books with this status are shown; an empty selection shows every status. */
+export function isStatusIncluded(statuses: StatusFilter[], status: StatusFilter): boolean {
+  return statuses.length === 0 || statuses.includes(status)
+}
+
+/**
+ * Switches a status on or off in the selection, keeping the standard order. The last
+ * selected status can't be switched off, since an empty selection would show nothing useful.
+ */
+export function toggleStatusFilter(statuses: StatusFilter[], status: StatusFilter): StatusFilter[] {
+  const included = STATUS_FILTERS.filter((s) => isStatusIncluded(statuses, s))
+  if (!included.includes(status)) return STATUS_FILTERS.filter((s) => included.includes(s) || s === status)
+  return included.length === 1 ? included : included.filter((s) => s !== status)
 }
 
 export function filterBooks<T extends FilterableBook>(books: T[], filters: Filters): T[] {

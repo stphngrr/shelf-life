@@ -2,7 +2,15 @@
 // ABOUTME: Years combine with OR, tags with AND; search spans all years.
 
 import type { BookStatus } from '../types/catalog.ts'
-import { DEFAULT_FILTERS, filterBooks, matchesFilters, type FilterableBook, type Filters } from './filters.ts'
+import {
+  DEFAULT_FILTERS,
+  filterBooks,
+  isStatusIncluded,
+  matchesFilters,
+  toggleStatusFilter,
+  type FilterableBook,
+  type Filters,
+} from './filters.ts'
 
 type BookOverrides = Partial<Omit<FilterableBook, 'status'>> & { status?: BookStatus | null }
 
@@ -119,6 +127,35 @@ describe('search', () => {
   it('still applies the tag and status filters', () => {
     expect(matchesFilters(book({ ...baldwin, status: 'dismissed' }), filters({ search: 'baldwin' }))).toBe(false)
     expect(matchesFilters(baldwin, filters({ tags: ['poetry'], search: 'baldwin' }))).toBe(false)
+  })
+})
+
+describe('toggleStatusFilter', () => {
+  it('adds a status that is not selected', () => {
+    expect(toggleStatusFilter(['unmarked', 'read'], 'dismissed')).toEqual(['unmarked', 'read', 'dismissed'])
+  })
+
+  it('removes a selected status', () => {
+    expect(toggleStatusFilter(['unmarked', 'read'], 'read')).toEqual(['unmarked'])
+  })
+
+  it('keeps the last selected status, since an empty selection would show nothing useful', () => {
+    expect(toggleStatusFilter(['read'], 'read')).toEqual(['read'])
+  })
+
+  it('treats an empty selection as every status', () => {
+    expect(toggleStatusFilter([], 'dismissed')).toEqual(['unmarked', 'want_to_read', 'read'])
+  })
+})
+
+describe('isStatusIncluded', () => {
+  it('is true for a selected status and false otherwise', () => {
+    expect(isStatusIncluded(['read'], 'read')).toBe(true)
+    expect(isStatusIncluded(['read'], 'unmarked')).toBe(false)
+  })
+
+  it('includes every status when none is selected', () => {
+    expect(isStatusIncluded([], 'dismissed')).toBe(true)
   })
 })
 

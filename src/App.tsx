@@ -1,12 +1,15 @@
 // ABOUTME: Root component for the shelf-life app.
-// ABOUTME: Shows the sign-in screen until the reader is signed in, then the signed-in layout.
+// ABOUTME: Shows the sign-in screen until the reader is signed in, then the browse page.
 
+import { useQueryClient } from '@tanstack/react-query'
 import { LoginScreen } from './auth/LoginScreen.tsx'
 import { useSession } from './auth/useSession.ts'
+import { BrowsePage } from './books/BrowsePage.tsx'
 import { useSupabase } from './data/supabaseContext.ts'
 
 function App() {
   const client = useSupabase()
+  const queryClient = useQueryClient()
   const session = useSession()
 
   if (session.status === 'loading') {
@@ -19,6 +22,8 @@ function App() {
   async function signOut() {
     const { error } = await client.auth.signOut()
     if (error) console.error('Sign out failed', error)
+    // Drop everything loaded for this reader so the next one starts clean.
+    queryClient.clear()
   }
 
   return (
@@ -29,7 +34,9 @@ function App() {
           Sign out
         </button>
       </header>
-      <main className="p-4" />
+      <main className="p-4">
+        <BrowsePage userId={session.session.user.id} />
+      </main>
     </div>
   )
 }
