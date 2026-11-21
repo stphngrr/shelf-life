@@ -87,7 +87,11 @@ NULL = not rated; 0 = explicit zero stars.
 
 ## 5. Frontend UI
 
-- **Login:** email → magic link; session persists.
+- **Login:** email → magic link; session persists. Uses Supabase's PKCE flow, so
+  the link returns a one-time `?code=` query parameter instead of tokens in the
+  URL hash (which holds the filters). The link must be opened in the browser
+  that requested it. Unknown emails are told no account exists; a paused
+  project (HTTP 540) gets restore instructions.
 - **Filter bar:** Years (multi-select, OR; none selected = all years, which
   is the default), Tags (multi-select, AND), Status (multi-select; default all
   but dismissed), title/author search, result count, clear filters.

@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     // Tests that render components opt into jsdom with a `@vitest-environment jsdom` comment.
     environment: 'node',
+    // The Vite dev server's address, which local auth allows as a magic-link redirect.
+    environmentOptions: { jsdom: { url: 'http://localhost:5173/' } },
     include: ['tests/integration/**/*.test.{ts,tsx}'],
     setupFiles: './src/test/setup.ts',
     env: loadEnv(mode, process.cwd(), ''),

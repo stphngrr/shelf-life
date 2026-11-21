@@ -4,7 +4,7 @@
 import type { PostgrestError } from '@supabase/supabase-js'
 
 /** Supabase's status for "The project the request was being made against has been paused." */
-const PROJECT_PAUSED_STATUS = 540
+export const PROJECT_PAUSED_STATUS = 540
 /** supabase-js reports a failed network request as status 0; gateways report 502–504. */
 const UNREACHABLE_STATUSES = [0, 502, 503, 504]
 

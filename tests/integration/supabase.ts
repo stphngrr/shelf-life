@@ -17,19 +17,22 @@ function requireEnv(name: string): string {
   return value
 }
 
-const clientOptions = { auth: { persistSession: false, autoRefreshToken: false } }
+// Each client gets its own storage key so clients created in a jsdom page don't share a session.
+function clientOptions() {
+  return { auth: { persistSession: false, autoRefreshToken: false, storageKey: `test-${randomUUID()}` } }
+}
 
 // The secret-key and publishable-key clients are untyped so tests can send rows the
 // schema should reject; signed-in test users get a typed client, as the app does.
 
 /** Client using the secret key: bypasses Row Level Security and can call admin APIs. */
 export function secretClient(): SupabaseClient {
-  return createClient(requireEnv('SUPABASE_URL'), requireEnv('SUPABASE_SECRET_KEY'), clientOptions)
+  return createClient(requireEnv('SUPABASE_URL'), requireEnv('SUPABASE_SECRET_KEY'), clientOptions())
 }
 
 /** Client using the publishable key, as the browser app does. Starts with no session. */
 export function publishableClient(): SupabaseClient {
-  return createClient(requireEnv('VITE_SUPABASE_URL'), requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY'), clientOptions)
+  return createClient(requireEnv('VITE_SUPABASE_URL'), requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY'), clientOptions())
 }
 
 /** Throws unless the URL points at a local database, so resets can never touch production. */
@@ -74,7 +77,7 @@ export async function createTestUser(): Promise<{ user: User; client: SupabaseCl
   const client = createClient<Database>(
     requireEnv('VITE_SUPABASE_URL'),
     requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY'),
-    clientOptions,
+    clientOptions(),
   )
   const signedIn = await client.auth.signInWithPassword({ email, password: TEST_USER_PASSWORD })
   if (signedIn.error) throw signedIn.error
