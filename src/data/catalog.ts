@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CatalogItem, ExternalLinks } from '../types/catalog.ts'
 import type { Database } from '../types/database.ts'
 import { fetchAllPages } from './fetchAllPages.ts'
+import { unwrapResponse } from './response.ts'
 
 type Client = SupabaseClient<Database>
 
@@ -36,12 +37,9 @@ export async function fetchCatalog(client: Client): Promise<CatalogItem[]> {
 }
 
 export async function fetchEntryDetail(client: Client, entryId: string): Promise<EntryDetail> {
-  const { data, error } = await client
-    .from('list_entries')
-    .select('blurb_html, reviewers, external_links')
-    .eq('id', entryId)
-    .maybeSingle()
-  if (error) throw error
+  const data = unwrapResponse(
+    await client.from('list_entries').select('blurb_html, reviewers, external_links').eq('id', entryId).maybeSingle(),
+  )
   if (!data) throw new Error(`List entry ${entryId} not found`)
   return {
     blurbHtml: data.blurb_html,

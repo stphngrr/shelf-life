@@ -6,6 +6,7 @@ import type { StatusChange } from '../lib/statusTransitions.ts'
 import type { StatusRecord } from '../types/catalog.ts'
 import type { Database } from '../types/database.ts'
 import { fetchAllPages } from './fetchAllPages.ts'
+import { unwrapResponse } from './response.ts'
 
 type Client = SupabaseClient<Database>
 
@@ -21,12 +22,13 @@ export async function fetchStatuses(client: Client): Promise<Map<string, StatusR
 
 export async function applyStatusChange(client: Client, userId: string, bookId: string, change: StatusChange): Promise<void> {
   if (change.kind === 'remove') {
-    await client.from('book_statuses').delete().eq('user_id', userId).eq('book_id', bookId).throwOnError()
+    unwrapResponse(await client.from('book_statuses').delete().eq('user_id', userId).eq('book_id', bookId))
     return
   }
   const { status, dateRead, ratingQuarters } = change.record
-  await client
-    .from('book_statuses')
-    .upsert({ user_id: userId, book_id: bookId, status, date_read: dateRead, rating_quarters: ratingQuarters })
-    .throwOnError()
+  unwrapResponse(
+    await client
+      .from('book_statuses')
+      .upsert({ user_id: userId, book_id: bookId, status, date_read: dateRead, rating_quarters: ratingQuarters }),
+  )
 }
