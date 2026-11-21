@@ -82,7 +82,7 @@ NULL = not rated; 0 = explicit zero stars.
 
 **RLS:**
 - `lists`, `books`, `list_entries`: `SELECT` for `authenticated` only. Writes
-  only via the secret key (import script).
+  only by the import script over a direct Postgres connection.
 - `book_statuses`: all operations only where `user_id = auth.uid()`.
 
 ## 5. Frontend UI
@@ -112,14 +112,26 @@ NULL = not rated; 0 = explicit zero stars.
 ## 6. Import, scheduled jobs, export
 
 **`npm run import:npr`:**
-1. Fetch `shelf.json`; on fetch failure or schema mismatch, abort with a clear
+1. Fetch `shelf.json` (7.1 MB uncompressed, ~2 MB gzipped); on fetch failure,
+   schema mismatch, duplicate `year:id`, or an empty feed, abort with a clear
    error and write nothing.
-2. Normalize: edition lowercased; tags trimmed/lowercased (curly apostrophes
-   preserved); ISBNs from `isbn10`/`isbn13`; `cover_url` from year + `cover`;
-   `external_links` from goodreads/bookshop/itunes ids and `links`.
-3. Upsert in one transaction keyed on `(list_id, source_key)`. New → create
-   book + entry. Existing → update entry and the book's
-   title/author/ISBNs/cover.
+2. Normalize:
+   - title, author, reviewers: decode HTML entities (NPR stores e.g.
+     `Minh L&ecirc;`), trim.
+   - edition: trimmed, lowercased; empty or missing → null.
+   - tags: trimmed, lowercased, straight apostrophes → `’` (as NPR does),
+     empties dropped, de-duplicated.
+   - ISBNs from `isbn10`/`isbn13`; empty or missing → null (warning).
+   - `cover_url` from year + `cover` (`cover` is not always the ISBN).
+   - `blurb_html`: NPR's HTML as-is; sanitized at render time.
+   - `external_links` (camelCase JSON), using NPR's own URL formats incl. its
+     affiliate codes: `npr` permalink (`…/best-books/#year=Y&book=ID`),
+     `goodreads`, `bookshop`, `appleBooks`, `worldcat` (from ISBN), and
+     `stories` (`source`, trimmed `text`, `url`). External ids that are `''`
+     or missing are omitted.
+3. Upsert in one Postgres transaction over a direct connection, keyed on
+   `(list_id, source_key)`. New → create book + entry. Existing → update entry
+   and the book's title/author/ISBNs/cover only if something changed.
 4. Entries missing from the feed get `removed_from_source_at` set (cleared if
    they reappear). Never deleted.
 5. Print summary: added / updated / unchanged / flagged-removed / data
@@ -135,15 +147,17 @@ Idempotent.
 - `export.yml` — weekly: dumps `book_statuses` joined with title/author/ISBNs
   to a dated JSON file committed to private `stphngrr/shelf-life-data`.
 
-**Secrets** (GitHub Actions only, never in code): Supabase URL, secret key
-(`sb_secret_…`, bypasses RLS), a user credential for the keep-alive query if
-needed, and a token/deploy key for `shelf-life-data`. The frontend uses only
-the publishable key (`sb_publishable_…`).
+**Secrets** (GitHub Actions only, never in code): the Postgres connection
+string (`SUPABASE_DB_URL`, via Supabase's connection pooler in session mode,
+because Actions runners lack IPv6 and the free-tier direct connection is
+IPv6-only), and a token/deploy key for `shelf-life-data`. The database
+connection bypasses RLS. The frontend uses only the publishable key
+(`sb_publishable_…`).
 
 **Env vars** (see `.env.example`): `VITE_SUPABASE_URL`,
-`VITE_SUPABASE_PUBLISHABLE_KEY` (frontend); `SUPABASE_URL`,
-`SUPABASE_SECRET_KEY` (scripts and integration tests only, never `VITE_`
-prefixed so they can't be bundled).
+`VITE_SUPABASE_PUBLISHABLE_KEY` (frontend); `SUPABASE_DB_URL` (scripts and
+integration tests); `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (integration tests).
+None of the non-`VITE_` values can be bundled.
 
 ## 7. Testing
 

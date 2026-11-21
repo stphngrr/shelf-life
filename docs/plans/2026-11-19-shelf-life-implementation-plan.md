@@ -54,18 +54,22 @@ Conventions for every step:
     `tests/fixtures/npr-shelf-sample.json` (~20 records across several years,
     including: `Fall` vs `fall` edition, missing ISBN, curly-apostrophe tags,
     story links, empty itunes).
-2.2 `scripts/npr/validate.ts` — runtime shape check of raw records (`unknown`
-    in, typed record or descriptive error out). Unit tests incl. malformed.
-2.3 `scripts/npr/normalize.ts` — raw record → `{ book, entry }` rows. Unit
-    tests for every normalization rule in spec §6.
-2.4 `scripts/npr/import.ts` — transactional upsert + removal flagging +
-    summary. Integration tests against local Supabase: first run inserts all;
-    re-run reports all unchanged and changes nothing; fixture with one record
-    removed flags it; re-adding clears flag; statuses untouched throughout.
-    Implementation likely a Postgres function (RPC) taking a jsonb batch so
-    the whole import is one transaction — confirm while writing tests.
-2.5 `scripts/import-npr.ts` CLI: fetch (gzip), validate, import, print
-    summary; non-zero exit on failure. Test fetch-failure path writes nothing.
+2.2 `scripts/npr/parseShelf.ts` — runtime shape check of the raw feed
+    (`unknown` in, typed records or descriptive error out; rejects empty feeds
+    and duplicate `year:id`). Unit tests incl. malformed.
+2.3 `scripts/npr/normalize.ts` — record → `{ sourceKey, book, entry }` plus
+    data warnings. Unit tests for every normalization rule in spec §6.
+2.4 `scripts/catalog/importEntries.ts` — one Postgres transaction over a
+    `pg` connection: rows sent as a single jsonb parameter, set-based
+    insert/update/flag SQL, summary counts. Integration tests against local
+    Supabase: first run inserts all; re-run reports all unchanged and changes
+    nothing; a changed record updates; a removed record is flagged and
+    re-adding clears the flag; statuses untouched; a failing row rolls back
+    everything; unknown list slug fails.
+2.5 `scripts/import-npr.ts` CLI: fetch, parse, normalize, import, print
+    summary + warnings; non-zero exit on failure. Integration tests run the
+    CLI against a local HTTP server serving the fixture, and against an
+    unreachable URL (writes nothing).
 2.6 Run a real import into local Supabase; sanity-check counts (4,371).
 
 ## Phase 3 — Pure logic and data layer
