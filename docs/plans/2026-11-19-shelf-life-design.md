@@ -121,14 +121,16 @@ NULL = not rated; 0 = explicit zero stars.
    - edition: trimmed, lowercased; empty or missing → null.
    - tags: trimmed, lowercased, straight apostrophes → `’` (as NPR does),
      empties dropped, de-duplicated.
-   - ISBNs from `isbn10`/`isbn13`; empty or missing → null (warning).
+   - ISBNs from `isbn10`/`isbn13`; empty or missing → null (warning). NPR
+     derives a bogus ISBN-10 for 979-prefixed ISBN-13s, which have none → null.
    - `cover_url` from year + `cover` (`cover` is not always the ISBN).
    - `blurb_html`: NPR's HTML as-is; sanitized at render time.
    - `external_links` (camelCase JSON), using NPR's own URL formats incl. its
-     affiliate codes: `npr` permalink (`…/best-books/#year=Y&book=ID`),
-     `goodreads`, `bookshop`, `appleBooks`, `worldcat` (from ISBN), and
-     `stories` (`source`, trimmed `text`, `url`). External ids that are `''`
-     or missing are omitted.
+     affiliate codes: `listPage` (the book's page on NPR's site,
+     `…/best-books/#year=Y&book=ID`), `goodreads`, `bookshop`, `appleBooks`,
+     `worldcat` (from ISBN), and `stories` (`source`, trimmed `text`, `url`;
+     links without a url are dropped with a warning). External ids that are
+     `''` or missing are omitted.
 3. Upsert in one Postgres transaction over a direct connection, keyed on
    `(list_id, source_key)`. New → create book + entry. Existing → update entry
    and the book's title/author/ISBNs/cover only if something changed.
