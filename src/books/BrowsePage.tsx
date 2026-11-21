@@ -1,15 +1,16 @@
 // ABOUTME: The signed-in browsing page: filters the catalog and shows matching books to mark.
 // ABOUTME: Filters live in the URL hash; books and statuses come from useBooks; marks save optimistically.
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { catalogFacets } from '../lib/facets.ts'
 import { filterBooks } from '../lib/filters.ts'
 import { sortBooks } from '../lib/sortBooks.ts'
-import { toggleStatus } from '../lib/statusTransitions.ts'
+import { toggleStatus, updateReadDetails, type ReadDetails } from '../lib/statusTransitions.ts'
 import { filtersToHash } from '../lib/urlState.ts'
 import type { BookStatus } from '../types/catalog.ts'
 import { BookGrid } from './BookGrid.tsx'
 import { BookList } from './BookList.tsx'
+import { DetailPanel } from './DetailPanel.tsx'
 import { FilterBar } from './FilterBar.tsx'
 import { useBooks, type BrowseBook } from './useBooks.ts'
 import { useFilters } from './useFilters.ts'
@@ -26,6 +27,10 @@ export function BrowsePage({ userId }: { userId: string }) {
   const { setStatus, errorMessage, dismissError } = useSetBookStatus(userId)
   const [viewMode, setViewMode] = useViewMode()
   const BookView = viewMode === 'list' ? BookList : BookGrid
+  const [openEntryId, setOpenEntryId] = useState<string | null>(null)
+  const closePanel = useCallback(() => setOpenEntryId(null), [])
+  // Taken from all books, not just matching ones, so the panel stays open if a change filters it out.
+  const openBook = books.books.find((book) => book.entryId === openEntryId)
 
   const facets = useMemo(() => catalogFacets(books.books), [books.books])
   const sorted = useMemo(() => sortBooks(books.books), [books.books])
@@ -43,6 +48,11 @@ export function BrowsePage({ userId }: { userId: string }) {
       !losesReadDetails ||
       window.confirm(`Change the status of "${book.title}"? Its date read and rating will be cleared.`)
     if (confirmed) setStatus(book.bookId, change)
+  }
+
+  function handleUpdateReadDetails(book: BrowseBook, details: ReadDetails) {
+    if (!book.status) return
+    setStatus(book.bookId, { kind: 'save', record: updateReadDetails(book.status, details) })
   }
 
   if (books.state === 'loading') return <p className="text-gray-600">Loading books…</p>
@@ -74,7 +84,11 @@ export function BrowsePage({ userId }: { userId: string }) {
       <div className="flex justify-end">
         <ViewToggle mode={viewMode} onChange={setViewMode} />
       </div>
-      <BookView books={matching.slice(0, shownCount)} onToggleStatus={handleToggleStatus} onOpen={() => {}} />
+      <BookView
+        books={matching.slice(0, shownCount)}
+        onToggleStatus={handleToggleStatus}
+        onOpen={(book) => setOpenEntryId(book.entryId)}
+      />
       {remaining > 0 && (
         <button
           type="button"
@@ -83,6 +97,14 @@ export function BrowsePage({ userId }: { userId: string }) {
         >
           Show {Math.min(remaining, PAGE_SIZE)} more
         </button>
+      )}
+      {openBook && (
+        <DetailPanel
+          book={openBook}
+          onClose={closePanel}
+          onToggleStatus={handleToggleStatus}
+          onUpdateReadDetails={handleUpdateReadDetails}
+        />
       )}
     </div>
   )
