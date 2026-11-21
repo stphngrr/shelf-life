@@ -10,9 +10,9 @@ import App from '../../src/App.tsx'
 import { BrowsePage } from '../../src/books/BrowsePage.tsx'
 import { statusesQueryKey } from '../../src/books/useBooks.ts'
 import { createAppSupabaseClient, type AppSupabaseClient } from '../../src/data/supabaseClient.ts'
-import { fixtureEntries, runImport } from './catalogFixtures.ts'
+import { fixtureEntries, runImport, syntheticEntries } from './catalogFixtures.ts'
 import { createAppWrapper } from './queryWrapper.tsx'
-import { createTestUser, resetDatabase, secretClient } from './supabase.ts'
+import { createTestUser, resetDatabase, secretClient, sql } from './supabase.ts'
 
 function appClient(url = process.env.VITE_SUPABASE_URL!) {
   return createAppSupabaseClient(url, process.env.VITE_SUPABASE_PUBLISHABLE_KEY!, {
@@ -98,6 +98,155 @@ describe('browse page', () => {
         'The Supabase project is paused. Restore it from the Supabase dashboard, then try again.',
       )
     })
+  })
+})
+
+describe('browsing and marking books', () => {
+  let client: AppSupabaseClient
+  let userId: string
+
+  beforeEach(async () => {
+    window.history.replaceState(null, '', '/')
+    await resetDatabase()
+  })
+
+  async function renderPage() {
+    ;({ client, userId } = await signedInAppClient())
+    const { wrapper: Wrapper } = createAppWrapper(client)
+    render(<BrowsePage userId={userId} />, { wrapper: Wrapper })
+    await screen.findByRole('status')
+    return userEvent.setup()
+  }
+
+  function card(title: string) {
+    return within(screen.getByRole('article', { name: title }))
+  }
+
+  async function storedStatus(title: string) {
+    const rows = await sql(
+      `select s.status, s.date_read::text as date_read, s.rating_quarters from public.book_statuses s
+       join public.books b on b.id = s.book_id where b.title = $1`,
+      [title],
+    )
+    return rows[0] ?? null
+  }
+
+  it('shows books newest year first, then by title', async () => {
+    await runImport(fixtureEntries)
+    await renderPage()
+
+    const titles = screen.getAllByRole('article').map((a) => a.getAttribute('aria-label'))
+    expect(titles.slice(0, 2)).toEqual(['A Book of Maps for You', 'An Oral History of Atlantis: Stories'])
+    expect(titles.at(-1)).toBe('A Constellation Of Vital Phenomena: A Novel')
+  })
+
+  it('shows 60 books at a time', async () => {
+    await runImport(syntheticEntries(70))
+    const user = await renderPage()
+
+    expect(screen.getAllByRole('article')).toHaveLength(60)
+    await user.click(screen.getByRole('button', { name: 'Show 10 more' }))
+
+    expect(screen.getAllByRole('article')).toHaveLength(70)
+    expect(screen.queryByRole('button', { name: /^Show \d+ more$/ })).toBeNull()
+  })
+
+  it('starts again from the first 60 when the filters change', async () => {
+    await runImport(syntheticEntries(70))
+    const user = await renderPage()
+    await user.click(screen.getByRole('button', { name: 'Show 10 more' }))
+
+    await user.click(within(screen.getByRole('group', { name: 'Status' })).getByRole('button', { name: 'Dismissed' }))
+
+    expect(screen.getAllByRole('article')).toHaveLength(60)
+  })
+
+  it('marks a book read with one tap and saves it', async () => {
+    await runImport(fixtureEntries)
+    const user = await renderPage()
+
+    await user.click(card('Baldwin: A Love Story').getByRole('button', { name: 'Read' }))
+
+    expect(card('Baldwin: A Love Story').getByTestId('status-badge')).toHaveTextContent('Read')
+    await waitFor(async () =>
+      expect(await storedStatus('Baldwin: A Love Story')).toEqual({ status: 'read', date_read: null, rating_quarters: null }),
+    )
+  })
+
+  it('hides a dismissed book from the default view', async () => {
+    await runImport(fixtureEntries)
+    const user = await renderPage()
+
+    await user.click(card('Baldwin: A Love Story').getByRole('button', { name: 'Dismiss' }))
+
+    expect(screen.queryByRole('article', { name: 'Baldwin: A Love Story' })).toBeNull()
+    expect(screen.getByRole('status')).toHaveTextContent('25 books')
+    await waitFor(async () => expect((await storedStatus('Baldwin: A Love Story'))?.status).toBe('dismissed'))
+  })
+
+  describe('leaving Read on a book with a date or rating', () => {
+    async function renderWithRatedBook() {
+      await runImport(fixtureEntries)
+      ;({ client, userId } = await signedInAppClient())
+      await sql(
+        `insert into public.book_statuses (user_id, book_id, status, date_read, rating_quarters)
+         select $1, b.id, 'read', '2025-06-14', 15 from public.books b where b.title = 'Baldwin: A Love Story'`,
+        [userId],
+      )
+      const { wrapper: Wrapper } = createAppWrapper(client)
+      render(<BrowsePage userId={userId} />, { wrapper: Wrapper })
+      await screen.findByRole('status')
+      return userEvent.setup()
+    }
+
+    it('keeps the date and rating when the reader declines', async () => {
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+      const user = await renderWithRatedBook()
+
+      await user.click(card('Baldwin: A Love Story').getByRole('button', { name: 'Want' }))
+
+      expect(confirm).toHaveBeenCalledWith(
+        'Change the status of "Baldwin: A Love Story"? Its date read and rating will be cleared.',
+      )
+      expect(card('Baldwin: A Love Story').getByTestId('status-badge')).toHaveTextContent('Read · ★ 3.75')
+      expect(await storedStatus('Baldwin: A Love Story')).toEqual({
+        status: 'read',
+        date_read: '2025-06-14',
+        rating_quarters: 15,
+      })
+    })
+
+    it('clears them when the reader confirms', async () => {
+      vi.spyOn(window, 'confirm').mockReturnValue(true)
+      const user = await renderWithRatedBook()
+
+      await user.click(card('Baldwin: A Love Story').getByRole('button', { name: 'Want' }))
+
+      await waitFor(async () =>
+        expect(await storedStatus('Baldwin: A Love Story')).toEqual({
+          status: 'want_to_read',
+          date_read: null,
+          rating_quarters: null,
+        }),
+      )
+    })
+  })
+
+  it('explains a failed save and lets the reader dismiss the message', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await runImport(fixtureEntries)
+    const user = await renderPage()
+    // With the account gone, the database rejects the status's reference to it.
+    await secretClient().auth.admin.deleteUser(userId)
+
+    await user.click(card('Baldwin: A Love Story').getByRole('button', { name: 'Read' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^Could not save your change: /)
+    expect(card('Baldwin: A Love Story').queryByTestId('status-badge')).toBeNull()
+    expect(consoleError).toHaveBeenCalledWith('Could not save status', expect.anything())
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss message' }))
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 })
 
