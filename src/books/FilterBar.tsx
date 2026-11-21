@@ -13,6 +13,8 @@ interface FilterBarProps {
   tags: string[]
   resultCount: number
   onChange: (next: Filters, options?: FilterUpdateOptions) => void
+  /** Extra controls shown beside the result count, such as the view toggle. */
+  actions?: ReactNode
 }
 
 function toggled<T>(values: T[], value: T): T[] {
@@ -47,7 +49,12 @@ function ToggleChip({
 
 function ChipGroup({ name, children }: { name: string; children: ReactNode }) {
   return (
-    <div role="group" aria-label={name} className="flex flex-wrap gap-2">
+    // On phones each group is one row that scrolls sideways, so the books stay near the top.
+    <div
+      role="group"
+      aria-label={name}
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
+    >
       {children}
     </div>
   )
@@ -58,7 +65,7 @@ function describeCount(count: number): string {
   return count === 1 ? '1 book' : `${count} books`
 }
 
-export function FilterBar({ filters, years, tags, resultCount, onChange }: FilterBarProps) {
+export function FilterBar({ filters, years, tags, resultCount, onChange, actions }: FilterBarProps) {
   const isDefault = filtersToHash(filters) === filtersToHash(DEFAULT_FILTERS)
   const searching = filters.search.trim() !== ''
   const includedStatusCount = STATUS_FILTERS.filter((s) => isStatusIncluded(filters.statuses, s)).length
@@ -114,10 +121,11 @@ export function FilterBar({ filters, years, tags, resultCount, onChange }: Filte
         ))}
       </ChipGroup>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <p role="status" className="text-sm font-medium text-gray-700">
           {describeCount(resultCount)}
         </p>
+        <span className="ml-auto">{actions}</span>
         <button
           type="button"
           disabled={isDefault}

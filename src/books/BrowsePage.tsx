@@ -65,39 +65,40 @@ export function BrowsePage({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <FilterBar
-        filters={filters}
-        years={facets.years}
-        tags={facets.tags}
-        resultCount={matching.length}
-        onChange={setFilters}
-      />
-      {errorMessage && (
-        <div role="alert" className="flex items-start justify-between gap-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
-          <p>{errorMessage}</p>
-          <button type="button" onClick={dismissError} className="underline">
-            Dismiss message
+    <>
+      {/* While a book's panel is open, the page behind it can't take focus or clicks. */}
+      <div inert={openBook !== undefined} className="flex flex-col gap-6">
+        <FilterBar
+          filters={filters}
+          years={facets.years}
+          tags={facets.tags}
+          resultCount={matching.length}
+          onChange={setFilters}
+          actions={<ViewToggle mode={viewMode} onChange={setViewMode} />}
+        />
+        {errorMessage && (
+          <div role="alert" className="flex items-start justify-between gap-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
+            <p>{errorMessage}</p>
+            <button type="button" onClick={dismissError} className="underline">
+              Dismiss message
+            </button>
+          </div>
+        )}
+        <BookView
+          books={matching.slice(0, shownCount)}
+          onToggleStatus={handleToggleStatus}
+          onOpen={(book) => setOpenEntryId(book.entryId)}
+        />
+        {remaining > 0 && (
+          <button
+            type="button"
+            onClick={() => setShown({ filterKey, count: shownCount + PAGE_SIZE })}
+            className="self-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:border-gray-500"
+          >
+            Show {Math.min(remaining, PAGE_SIZE)} more
           </button>
-        </div>
-      )}
-      <div className="flex justify-end">
-        <ViewToggle mode={viewMode} onChange={setViewMode} />
+        )}
       </div>
-      <BookView
-        books={matching.slice(0, shownCount)}
-        onToggleStatus={handleToggleStatus}
-        onOpen={(book) => setOpenEntryId(book.entryId)}
-      />
-      {remaining > 0 && (
-        <button
-          type="button"
-          onClick={() => setShown({ filterKey, count: shownCount + PAGE_SIZE })}
-          className="self-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:border-gray-500"
-        >
-          Show {Math.min(remaining, PAGE_SIZE)} more
-        </button>
-      )}
       {openBook && (
         <DetailPanel
           book={openBook}
@@ -106,6 +107,6 @@ export function BrowsePage({ userId }: { userId: string }) {
           onUpdateReadDetails={handleUpdateReadDetails}
         />
       )}
-    </div>
+    </>
   )
 }

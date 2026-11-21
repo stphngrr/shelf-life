@@ -71,6 +71,23 @@ describe('detail panel', () => {
     expect(dialog.getByRole('button', { name: 'Close' })).toHaveFocus()
   })
 
+  it('keeps keyboard focus out of the page behind it while open', async () => {
+    await openBaldwin()
+
+    expect(screen.getByRole('article', { name: 'Baldwin: A Love Story', hidden: true }).closest('[inert]')).not.toBeNull()
+    expect(screen.getByRole('dialog').closest('[inert]')).toBeNull()
+  })
+
+  it('returns focus to the book it was opened from when it closes', async () => {
+    const { user } = await openBaldwin()
+
+    await user.keyboard('{Escape}')
+
+    const card = within(screen.getByRole('article', { name: 'Baldwin: A Love Story' }))
+    expect(card.getByRole('button', { name: 'Baldwin: A Love Story' })).toHaveFocus()
+    expect(screen.getByRole('article', { name: 'Baldwin: A Love Story' }).closest('[inert]')).toBeNull()
+  })
+
   it('closes with the close button', async () => {
     const { user, dialog } = await openBaldwin()
 

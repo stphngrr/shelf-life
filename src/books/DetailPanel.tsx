@@ -20,8 +20,14 @@ export function DetailPanel({ book, onClose, onToggleStatus, onUpdateReadDetails
   const detail = useEntryDetail(book.entryId)
   const closeButton = useRef<HTMLButtonElement>(null)
 
+  // Move focus into the panel, and give it back to whatever opened the panel when it closes.
   useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     closeButton.current?.focus()
+    return () => opener?.focus()
+  }, [])
+
+  useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
     }

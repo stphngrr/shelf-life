@@ -11,13 +11,13 @@ export function BookList({ books, onToggleStatus, onOpen }: BookViewProps) {
     <ul className="divide-y divide-gray-200">
       {books.map((book) => (
         <li key={book.entryId}>
-          <article aria-label={book.title} className="flex items-center gap-3 py-3">
+          <article aria-label={book.title} className="flex flex-wrap items-center gap-3 py-3 sm:flex-nowrap">
             <BookCover url={book.coverUrl} className="h-16 w-11 shrink-0 rounded" />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <button
                 type="button"
                 onClick={() => onOpen(book)}
-                className="truncate text-left text-sm font-semibold hover:underline"
+                className="line-clamp-2 text-left text-sm font-semibold hover:underline"
               >
                 {book.title}
               </button>
@@ -28,7 +28,8 @@ export function BookList({ books, onToggleStatus, onOpen }: BookViewProps) {
               </p>
               <StatusBadge status={book.status} />
             </div>
-            <div className="w-40 shrink-0">
+            {/* Below the title on phones, beside it on wider screens. */}
+            <div className="w-full sm:w-40 sm:shrink-0">
               <QuickMarkButtons current={book.status?.status ?? null} onToggle={(status) => onToggleStatus(book, status)} />
             </div>
           </article>
