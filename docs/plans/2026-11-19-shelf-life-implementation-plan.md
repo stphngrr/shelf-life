@@ -33,12 +33,12 @@ Conventions for every step:
 ## Phase 1 — Database
 
 1.1 Integration test harness: `tests/integration/` helper that connects with
-    service-role and anon clients to local Supabase, creates test users via
+    secret-key and publishable-key clients to local Supabase, creates test users via
     the admin API, and resets data between suites. Separate Vitest config
     (`vitest.integration.config.ts`, node environment).
 1.2 Migration: `lists`, `books`, `list_entries` (+ unique
     `(list_id, source_key)`, indexes on `book_id`, `year`). Tests: insert/read
-    via service role; uniqueness enforced.
+    via secret key; uniqueness enforced.
 1.3 Migration: `book_status` enum + `book_statuses` with rating range CHECK and
     read-only-fields CHECK. Tests: each constraint rejects bad rows, accepts
     good ones (0, 20, NULL rating; date only when read).
@@ -117,7 +117,7 @@ Conventions for every step:
     `supabase db push` migrations. Disable signups; configure magic-link
     redirect URL to the Pages URL. Create Stephanie's user.
 6.2 Configure Vite `base` for `/shelf-life/`; production env via build-time
-    vars (URL + anon key only).
+    vars (URL + publishable key only).
 6.3 `deploy.yml`: typecheck, unit/component tests, build, deploy to Pages.
     Enable Pages (Actions source).
 6.4 Add GitHub secrets; run first production import locally or via

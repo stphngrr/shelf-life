@@ -82,7 +82,7 @@ NULL = not rated; 0 = explicit zero stars.
 
 **RLS:**
 - `lists`, `books`, `list_entries`: `SELECT` for `authenticated` only. Writes
-  only via service-role key (import script).
+  only via the secret key (import script).
 - `book_statuses`: all operations only where `user_id = auth.uid()`.
 
 ## 5. Frontend UI
@@ -135,9 +135,15 @@ Idempotent.
 - `export.yml` — weekly: dumps `book_statuses` joined with title/author/ISBNs
   to a dated JSON file committed to private `stphngrr/shelf-life-data`.
 
-**Secrets** (GitHub Actions only, never in code): Supabase URL, service-role
-key, a user credential for the keep-alive query if needed, and a token/deploy
-key for `shelf-life-data`. The frontend uses only the anon key.
+**Secrets** (GitHub Actions only, never in code): Supabase URL, secret key
+(`sb_secret_…`, bypasses RLS), a user credential for the keep-alive query if
+needed, and a token/deploy key for `shelf-life-data`. The frontend uses only
+the publishable key (`sb_publishable_…`).
+
+**Env vars** (see `.env.example`): `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_PUBLISHABLE_KEY` (frontend); `SUPABASE_URL`,
+`SUPABASE_SECRET_KEY` (scripts and integration tests only, never `VITE_`
+prefixed so they can't be bundled).
 
 ## 7. Testing
 
